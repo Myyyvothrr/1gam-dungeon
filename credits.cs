@@ -6,9 +6,11 @@ public class credits : MonoBehaviour
 	public GUISkin _menu_skin;
 	
 	private Rect _rect_credits = new Rect(160, 400, 100, 30);
-	private Rect _rect_credits_text = new Rect(160, 400, 200, 200);
+    private Rect _rect_credits_text = new Rect(160, 400, 200, 200);
 
-	// Use this for initialization
+    public GameObject[] way_prefabs;
+    public GameObject[] turn_prefabs;
+
 	void Start ()
 	{
 		_rect_credits.x = (Screen.width-100)*0.5f;
@@ -18,12 +20,25 @@ public class credits : MonoBehaviour
 		_rect_credits_text.y = (Screen.height-50)*0.5f - 200;
 		
 		Screen.lockCursor = false;
+
+        GameObject obj;
+
+        int i = Random.Range(0, way_prefabs.Length);
+        
+        obj = (GameObject)Instantiate(way_prefabs[i], new Vector3(0, 0, 10), Quaternion.Euler(0, 0, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+        obj = (GameObject)Instantiate(way_prefabs[i], new Vector3(0, 0, -10), Quaternion.Euler(0, 0, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+        obj = (GameObject)Instantiate(way_prefabs[i], new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+        obj = (GameObject)Instantiate(turn_prefabs[i], new Vector3(0, 0, 20), Quaternion.Euler(0, 270, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+        obj = (GameObject)Instantiate(turn_prefabs[i], new Vector3(0, 0, -20), Quaternion.Euler(0, 0, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
 	}
 	
-	// Update is called once per frame
-	void Update ()
-	{
-	
+	void Update()
+	{	
 	}
 	
 	void OnGUI()

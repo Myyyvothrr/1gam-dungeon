@@ -11,16 +11,12 @@ public class weapon : MonoBehaviour
 	
 	public AudioClip _sound_hit;
 	
-	// Use this for initialization
-	void Start ()
-	{
-	
+	void Start()
+	{	
 	}
 	
-	// Update is called once per frame
-	void Update ()
-	{
-	
+	void Update()
+	{	
 	}
 	
 	void can_attack(bool attack)
@@ -46,7 +42,7 @@ public class weapon : MonoBehaviour
 			
 			audio.PlayOneShot(_sound_hit);	
 			
-			other.gameObject.BroadcastMessage("receive_damage", damage);
+			other.gameObject.SendMessageUpwards("receive_damage", damage);
 			_swinging = false;
 		}
 	}

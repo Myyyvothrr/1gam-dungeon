@@ -4,6 +4,7 @@ using System.Collections;
 public class enemy : MonoBehaviour
 {
 	private int hitpoints = 5;
+    private int damage = 5;
 	
 	public GameObject fireball_prefab;
 	
@@ -13,20 +14,26 @@ public class enemy : MonoBehaviour
 	private Vector3 _temp_rot;
 	
 	private bool _killed = false;
-	
-	// Use this for initialization
-	void Start ()
+
+    public GameObject[] loot_prefabs;
+   
+	void Start()
 	{		
 		_attack_spawnpoint = transform.Find("attack_spawnpoint").gameObject;
 		_player = GameObject.Find("/player");
-		
-		if (_player != null)
-			StartCoroutine(attack());
-		
-		animation.Play("Idle");
+
+        if (_player != null)
+        {
+            int difficulty = _player.GetComponent<player>().dungeon_level;
+            hitpoints *= difficulty;
+            damage *= difficulty;
+
+            StartCoroutine(attack());
+        }
+
+        animation.Play("Idle");
 	}
 	
-	// Update is called once per frame
 	void Update ()
 	{		
 		if (_player == null)
@@ -37,8 +44,6 @@ public class enemy : MonoBehaviour
 		
 		if (Vector3.Distance(transform.position, _player.transform.position) <= 20)
 		{
-		
-	//		transform.position = Vector3.MoveTowards(transform.position, _player.transform.position, 0.5f * Time.deltaTime);
 			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(_player.transform.position - transform.position), 200 * Time.deltaTime);
 			
 			_temp_rot = transform.rotation.eulerAngles;
@@ -56,7 +61,6 @@ public class enemy : MonoBehaviour
 		if (_killed)
 			return;
 		
-	//	rigidbody.AddForce(transform.forward * 10);
 		rigidbody.MovePosition(Vector3.MoveTowards(transform.position, _player.transform.position, 0.7f * Time.deltaTime));
 	}
 	
@@ -78,18 +82,19 @@ public class enemy : MonoBehaviour
 			audio.Play();
 			
 			StartCoroutine(death());
-			
-			// -1 -> 1 is being killed
-			if (GameObject.FindGameObjectsWithTag("enemy").Length-1 <= 0)
-				Application.LoadLevel(2);
 		}
 	}
 	
 	IEnumerator death()
-	{			
+	{
+        yield return new WaitForSeconds(0.5f);
+
+        if (Random.Range(0f, 1f) > 0.4f)
+            Instantiate(loot_prefabs[Random.Range(0, loot_prefabs.Length)], transform.position, Quaternion.identity);
+
 		yield return new WaitForSeconds(5f);
-			
-		Destroy(gameObject);
+
+        Destroy(gameObject);
 	}
 	
 	IEnumerator attack()
@@ -97,8 +102,8 @@ public class enemy : MonoBehaviour
 		while (true)
 		{			
 			yield return new WaitForSeconds(Random.Range(3, 9));
-			
-			if (_killed)
+
+            if (_killed || _player == null)
 				break;
 			
 			if (Vector3.Distance(transform.position, _player.transform.position) <= 20)
@@ -106,17 +111,17 @@ public class enemy : MonoBehaviour
 				animation.CrossFade("Attack", 0.2f);
 				
 				yield return new WaitForSeconds(0.5f);
-				
-				if (_killed)
+
+                if (_killed || _player == null)
 					break;
 	
-			//	GameObject o = (GameObject)Instantiate(fireball_prefab, transform.position + Vector3.Cross(transform.forward, Vector3.one), Quaternion.identity);
 				GameObject o = (GameObject)Instantiate(fireball_prefab, _attack_spawnpoint.transform.position, Quaternion.identity);
-				o.BroadcastMessage("set_dir", transform.forward);
+                o.BroadcastMessage("set_dir", transform.forward);
+                o.BroadcastMessage("set_damage", damage);
 							
 				yield return new WaitForSeconds(0.5f);
-				
-				if (_killed)
+
+                if (_killed || _player == null)
 					break;
 				
 				animation.CrossFade("Idle", 0.2f);

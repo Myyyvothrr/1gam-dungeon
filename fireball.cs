@@ -2,32 +2,27 @@ using UnityEngine;
 using System.Collections;
 
 public class fireball : MonoBehaviour
-{
-//	private Vector3 _dir = Vector3.zero;
-	
+{	
 	private int damage = 5;
-			
-	// Use this for initialization
-	void Start ()
+   
+	void Start()
 	{
-		StartCoroutine(destroy());
+        StartCoroutine(destroy());
 	}
 	
-	// Update is called once per frame
-	void Update ()
+	void Update()
 	{
-		//transform.Translate(_dir * 7 * Time.deltaTime, transform);
 	}
 	
 	void set_dir(Vector3 dir)
-	{
-	/*	transform.rotation = dir;
-		
-		_dir = dir.eulerAngles;
-		_dir.Normalize();*/
-		
+	{		
 		rigidbody.velocity = dir * 10;
 	}
+
+    void set_damage(int dmg)
+    {
+        damage = dmg;
+    }
 	
 	IEnumerator destroy()
 	{

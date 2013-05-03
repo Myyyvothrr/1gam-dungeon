@@ -8,17 +8,14 @@ public class door : MonoBehaviour
 	
 	private bool _opened = false;
 	
-	// Use this for initialization
-	void Start ()
+	void Start()
 	{
-		_left = transform.Find("door_left").gameObject;	
-		_right = transform.Find("door_right").gameObject;
+		_left = transform.Find("door_left").gameObject;
+        _right = transform.Find("door_right").gameObject;
 	}
 	
-	// Update is called once per frame
 	void Update ()
-	{
-	
+	{	
 	}
 	
 	void open()

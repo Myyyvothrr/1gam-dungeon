@@ -15,9 +15,11 @@ public class player : MonoBehaviour
 	public AudioClip _sound_coins_pickup;
 	
 	public AudioClip _sound_levelup;
+
+    public int last_exit_tile = -1;
 			
-	private int _hitpoints = 20;
-	private int _hitpoints_max = 20;	
+	private int _hitpoints = 30;
+	private int _hitpoints_max = 30;	
 	private int _potions_num = 1;
 	private int _coins_num = 0;
 	private int _xp_num = 0;
@@ -29,6 +31,8 @@ public class player : MonoBehaviour
 	private int _strength = 1;
 	private int _speed = 1;
 	private int _endurance = 1;
+
+    public int dungeon_level = 1;
 		
 	private GameObject _hands_left = null;
 	private GameObject _hands_right = null;
@@ -49,9 +53,12 @@ public class player : MonoBehaviour
 	private GameObject _door;
 	
 	private bool _show_gui = false;
-	
-	private Rect _gui_stats_window = new Rect(1, 1, 400, 400);
-	
+
+    private Rect _gui_stats_window = new Rect(1, 1, 400, 400);
+    private Rect _gui_exit_window = new Rect(1, 1, 200, 80);
+
+    private Rect _gui_exit_label = new Rect(20, 20, 160, 40);
+    	
 	private Rect _gui_level_label = new Rect(20, 20, 70, 25);
 	private Rect _gui_level_value = new Rect(100, 20, 25, 25);
 	
@@ -78,6 +85,7 @@ public class player : MonoBehaviour
 	
 	private Rect _gui_close_button = new Rect(290, 365, 100, 25);
 	private Rect _gui_buy_button = new Rect(10, 365, 200, 25);
+    private Rect _gui_quit_button = new Rect(250, 110, 100, 25);
 	
 	private Rect _gui_mouse_sensitivity_label = new Rect (250, 20, 130, 25);
 	private Rect _gui_mouse_sensitivity_slider = new Rect (250, 50, 130, 25);
@@ -86,12 +94,20 @@ public class player : MonoBehaviour
 	private CharacterMotor _char_motor;
 	private MouseLook _mouse_look_player;
 	private MouseLook _mouse_look_camera;
-				
-	// Use this for initialization
+
+    private bool _exit_triggered = false;
+    private bool _teleporter_triggered = false;
+    private bool _teleporter_boss_triggered = false;
+
 	void Start()
 	{
+        DontDestroyOnLoad(gameObject);
+
 		_gui_stats_window.x = (Screen.width-400) * 0.5f;
-		_gui_stats_window.y = (Screen.height-400) * 0.5f;
+        _gui_stats_window.y = (Screen.height - 400) * 0.5f;
+
+        _gui_exit_window.x = (Screen.width - 200) * 0.5f;
+        _gui_exit_window.y = (Screen.height - 80) * 0.5f;
 		
 		Screen.lockCursor = true;		
 				
@@ -113,17 +129,44 @@ public class player : MonoBehaviour
 		_char_motor = GetComponent<CharacterMotor>();
 		_mouse_look_player = GetComponent<MouseLook>();
 		_mouse_look_camera = Camera.main.GetComponent<MouseLook>();
+
+        try
+        {
+            _mouse_look_player.sensitivityX = PlayerPrefs.GetFloat("sensitivityX", _mouse_look_player.sensitivityX);
+            _mouse_look_camera.sensitivityY = PlayerPrefs.GetFloat("sensitivityY", _mouse_look_camera.sensitivityY);
+        }
+        catch (PlayerPrefsException ex)
+        {
+            Debug.Log(ex.Message);
+        }
 	}
 	
 	void OnGUI()
-	{
+    {
+        GUI.skin = _menu_skin;
+
+        if (_exit_triggered || _teleporter_triggered || _teleporter_boss_triggered)
+            _gui_exit_window = GUI.Window(0, _gui_exit_window, gui_exit_window, "");
+
 		if (!_show_gui)
 			return;
 		
-		GUI.skin = _menu_skin;
-		
 		_gui_stats_window = GUI.Window(0, _gui_stats_window, gui_stats_window, "");		
 	}
+
+    void gui_exit_window(int id)
+    {
+        GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+       
+        if (_exit_triggered)
+            GUI.Label(_gui_exit_label, "You are about to go down the stairs... ");
+        else if (_teleporter_triggered)
+            GUI.Label(_gui_exit_label, "Do you really want to enter? Be prepared!");
+        else if (_teleporter_boss_triggered)
+            GUI.Label(_gui_exit_label, "You can't go back... You better be ready!");
+
+        GUI.skin.label.alignment = TextAnchor.UpperLeft;
+    }
 	
 	void gui_stats_window(int id)
 	{
@@ -137,7 +180,7 @@ public class player : MonoBehaviour
 		GUI.Label(_gui_xp_label, "XP ");
 		GUI.Label(_gui_xp_value, _xp_num.ToString() + " / " + _xp_next_level);
 		
-		GUI.Label(_gui_lp_label, "Learpoints ");
+		GUI.Label(_gui_lp_label, "Learnpoints ");
 		GUI.Label(_gui_lp_value, _learn_points.ToString());
 		
 		GUI.Label(_gui_attribs_strength_label, "Strength ");
@@ -179,8 +222,8 @@ public class player : MonoBehaviour
 				++_speed;
 				--_learn_points;
 				
-				++_char_motor.movement.maxForwardSpeed;
-				++_char_motor.movement.maxSidewaysSpeed;				
+				_char_motor.movement.maxForwardSpeed += 0.5f;
+				_char_motor.movement.maxSidewaysSpeed += 0.5f;				
 				
 				audio.PlayOneShot(_sound_levelup);
 			}
@@ -201,9 +244,13 @@ public class player : MonoBehaviour
 		{
 			show_attribs_gui(false);	
 		}
+
+        if (GUI.Button(_gui_quit_button, "Quit"))
+        {
+            Application.LoadLevel(0);
+        }
 	}
 	
-	// Update is called once per frame
 	void Update()
 	{
 		_potions_text.text = "Potions: " + _potions_num + "\nKeys: " + _keys_num + "\nCoins: " + _coins_num;
@@ -211,9 +258,9 @@ public class player : MonoBehaviour
 			
 		if (Input.GetButtonUp("Fire3"))
 			show_attribs_gui(!_show_gui);
-		
-		if (Input.GetKey(KeyCode.Escape))
-			Application.LoadLevel(0);
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            show_attribs_gui(!_show_gui);
 		
 		if (_show_gui)
 			return;
@@ -286,12 +333,21 @@ public class player : MonoBehaviour
 		_hitpoints -= amount;
 		
 		if (_hitpoints <= 0)
-		{			
-			//Destroy(gameObject);			
+		{						
 			Application.LoadLevel(3);
 			Screen.lockCursor = false;
 		}
 	}
+
+    void OnLevelWasLoaded(int level)
+    {
+        _exit_triggered = false;
+
+        if (level != 1 && level != 5)
+            Destroy(gameObject);
+
+        Time.timeScale = 1f;
+    }
 	
 	void killed_enemy(int xp)
 	{
@@ -311,6 +367,8 @@ public class player : MonoBehaviour
 	
 	void show_attribs_gui(bool show)
 	{
+        Time.timeScale = !show ? 1f : 0f;
+
 		_show_gui = show;
 		Screen.lockCursor = !show;
 		
@@ -319,6 +377,19 @@ public class player : MonoBehaviour
 		
 		_mouse_look_player.enabled = !show;
 		_mouse_look_camera.enabled = !show;
+
+        if (!show)
+        {
+            try
+            {
+                PlayerPrefs.SetFloat("sensitivityX", _mouse_look_player.sensitivityX);
+                PlayerPrefs.SetFloat("sensitivityY", _mouse_look_camera.sensitivityY);
+            }
+            catch (PlayerPrefsException ex)
+            {
+                Debug.Log(ex.Message);
+            }
+        }
 	}
 	
 	IEnumerator attack()
@@ -384,4 +455,29 @@ public class player : MonoBehaviour
 			_can_drink = true;
 		}
 	}
+
+    void exit_triggered(bool state)
+    {
+        _exit_triggered = state;
+    }
+
+    void teleporter_triggered(bool state)
+    {
+        _teleporter_triggered = state;
+    }
+
+    void teleporter_boss_triggered(bool state)
+    {
+        _teleporter_boss_triggered = state;
+    }
+
+    void level_changer_trigger(int tile)
+    {
+        last_exit_tile = tile;
+        ++dungeon_level;
+
+        _exit_triggered = false;
+        _teleporter_triggered = false;
+        _teleporter_boss_triggered = false;
+    }
 }

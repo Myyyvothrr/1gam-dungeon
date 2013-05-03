@@ -7,14 +7,12 @@ public class chest : MonoBehaviour
 	
 	private int _amount = 0;
 
-	// Use this for initialization
-	void Start ()
+	void Start()
 	{
 		_coins = transform.Find("coins").gameObject;
-	}
+    }
 	
-	// Update is called once per frame
-	void Update ()
+	void Update()
 	{
 	}
 	

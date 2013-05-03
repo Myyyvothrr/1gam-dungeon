@@ -9,8 +9,10 @@ public class menu : MonoBehaviour
 	private Rect _rect_credits = new Rect(160, 400, 100, 30);
 	private Rect _rect_quit = new Rect(160, 450, 100, 30);
 
-	// Use this for initialization
-	void Start ()
+    public GameObject[] way_prefabs;
+    public GameObject[] turn_prefabs;
+
+	void Start()
 	{
 		_rect_play.x = (Screen.width-100)*0.5f;
 		_rect_credits.x = (Screen.width-100)*0.5f;
@@ -21,12 +23,19 @@ public class menu : MonoBehaviour
 		_rect_quit.y = (Screen.height-30)*0.5f + 50;
 		
 		Screen.lockCursor = false;
+
+        GameObject obj;
+
+        int i = Random.Range(0, way_prefabs.Length);
+        obj = (GameObject)Instantiate(way_prefabs[i], new Vector3(10, 0, 0), Quaternion.Euler(0, 90, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+        obj = (GameObject)Instantiate(turn_prefabs[i], new Vector3(0, 0, 0), Quaternion.Euler(0, 90, 0));
+        obj.GetComponent<tile>().dont_wait_spawning = true;
+
 	}
 	
-	// Update is called once per frame
-	void Update ()
-	{
-	
+	void Update()
+	{	
 	}
 	
 	void OnGUI()
