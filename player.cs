@@ -90,6 +90,16 @@ public class player : MonoBehaviour
 	private Rect _gui_mouse_sensitivity_label = new Rect (250, 20, 130, 25);
 	private Rect _gui_mouse_sensitivity_slider = new Rect (250, 50, 130, 25);
 	private Rect _gui_mouse_sensitivity_slider2 = new Rect (250, 80, 130, 25);
+
+    public Texture2D[] blood_overlay_tex;
+    private Rect _blood_overlay_rect;
+    private int _blood_overlay_index = 0;
+    private bool _show_blood = false;
+
+    public Texture2D levelup_overlay_tex;
+    private Rect _levelup_overlay_rect;
+    private Rect _levelup_overlay_rect2;
+    private bool _show_levelup = false;
 	
 	private CharacterMotor _char_motor;
 	private MouseLook _mouse_look_player;
@@ -108,6 +118,11 @@ public class player : MonoBehaviour
 
         _gui_exit_window.x = (Screen.width - 200) * 0.5f;
         _gui_exit_window.y = (Screen.height - 80) * 0.5f;
+
+        _blood_overlay_rect = new Rect(0, 0, Screen.width, Screen.height);
+
+        _levelup_overlay_rect = new Rect((Screen.width - 128) / 2, Screen.height - 200, 128, 128);
+        _levelup_overlay_rect2 = new Rect((Screen.width - 128) / 2, Screen.height - 70, 128, 70);
 		
 		Screen.lockCursor = true;		
 				
@@ -145,6 +160,17 @@ public class player : MonoBehaviour
     {
         GUI.skin = _menu_skin;
 
+        if (_show_blood)
+            GUI.DrawTexture(_blood_overlay_rect, blood_overlay_tex[_blood_overlay_index], ScaleMode.ScaleAndCrop, true);
+
+        if (_show_levelup)
+        {
+            GUI.DrawTexture(_levelup_overlay_rect, levelup_overlay_tex, ScaleMode.ScaleAndCrop, true);
+            GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(_levelup_overlay_rect2, "You reached a new level! Press [ESC] ");
+            GUI.skin.label.alignment = TextAnchor.UpperLeft;
+        }
+
         if (_exit_triggered || _teleporter_triggered || _teleporter_boss_triggered)
             _gui_exit_window = GUI.Window(0, _gui_exit_window, gui_exit_window, "");
 
@@ -167,89 +193,86 @@ public class player : MonoBehaviour
 
         GUI.skin.label.alignment = TextAnchor.UpperLeft;
     }
-	
-	void gui_stats_window(int id)
-	{
-		GUI.Label(_gui_mouse_sensitivity_label, "Mouse Sensitivity");
-		_mouse_look_player.sensitivityX = GUI.HorizontalSlider(_gui_mouse_sensitivity_slider, _mouse_look_player.sensitivityX, 1f, 30f);
-		_mouse_look_camera.sensitivityY = GUI.HorizontalSlider(_gui_mouse_sensitivity_slider2, _mouse_look_camera.sensitivityY, 1f, 30f);
-		
-		GUI.Label(_gui_level_label, "Level ");
-		GUI.Label(_gui_level_value, _level.ToString());
-		
-		GUI.Label(_gui_xp_label, "XP ");
-		GUI.Label(_gui_xp_value, _xp_num.ToString() + " / " + _xp_next_level);
-		
-		GUI.Label(_gui_lp_label, "Learnpoints ");
-		GUI.Label(_gui_lp_value, _learn_points.ToString());
-		
-		GUI.Label(_gui_attribs_strength_label, "Strength ");
-		GUI.Label(_gui_attribs_strength_value, _strength.ToString());
-		if (GUI.Button(_gui_attribs_strength_button, "+"))
-		{
-			if (_learn_points > 0)
-			{
-				++_strength;
-				--_learn_points;
-				
-				audio.PlayOneShot(_sound_levelup);
-			}
-		}
-		GUI.Label(_gui_attribs_strength_desc, "\"More strength means more damage!\"");
-				
-		GUI.Label(_gui_attribs_endurance_label, "Endurance ");
-		GUI.Label(_gui_attribs_endurance_value, _endurance.ToString());
-		if (GUI.Button(_gui_attribs_endurance_button, "+"))
-		{
-			if (_learn_points > 0)
-			{
-				++_endurance;
-				--_learn_points;
-				
-				_hitpoints_max += 10;
-				
-				audio.PlayOneShot(_sound_levelup);
-			}
-		}
-		GUI.Label(_gui_attribs_endurance_desc, "\"You can't hurt me! And better potions.\"");
-		
-		GUI.Label(_gui_attribs_speed_label, "Speed ");
-		GUI.Label(_gui_attribs_speed_value, _speed.ToString());
-		if (GUI.Button(_gui_attribs_speed_button, "+"))
-		{
-			if (_learn_points > 0)
-			{
-				++_speed;
-				--_learn_points;
-				
-				_char_motor.movement.maxForwardSpeed += 0.5f;
-				_char_motor.movement.maxSidewaysSpeed += 0.5f;				
-				
-				audio.PlayOneShot(_sound_levelup);
-			}
-		}
-		GUI.Label(_gui_attribs_speed_desc, "\"Run faster! Kill faster!\"");
-		
-		if (GUI.Button(_gui_buy_button, "Buy Potion: 50 Gold"))
-		{
-			if (_coins_num > 50)
-			{
-				++_potions_num;
-				_coins_num -= 50;
-				audio.PlayOneShot(_sound_coins_pickup);
-			}
-		}
-		
-		if (GUI.Button(_gui_close_button, "Done"))
-		{
-			show_attribs_gui(false);	
-		}
+
+    void gui_stats_window(int id)
+    {
+        GUI.Label(_gui_mouse_sensitivity_label, "Mouse Sensitivity");
+        _mouse_look_player.sensitivityX = GUI.HorizontalSlider(_gui_mouse_sensitivity_slider, _mouse_look_player.sensitivityX, 1f, 30f);
+        _mouse_look_camera.sensitivityY = GUI.HorizontalSlider(_gui_mouse_sensitivity_slider2, _mouse_look_camera.sensitivityY, 1f, 30f);
+
+        GUI.Label(_gui_level_label, "Level ");
+        GUI.Label(_gui_level_value, _level.ToString());
+
+        GUI.Label(_gui_xp_label, "XP ");
+        GUI.Label(_gui_xp_value, _xp_num.ToString() + " / " + _xp_next_level);
+
+        GUI.Label(_gui_lp_label, "Learnpoints ");
+        GUI.Label(_gui_lp_value, _learn_points.ToString());
+
+        GUI.Label(_gui_attribs_strength_label, "Strength ");
+        GUI.Label(_gui_attribs_strength_value, _strength.ToString());
+        if (GUI.Button(_gui_attribs_strength_button, "+"))
+        {
+            if (_learn_points > 0)
+            {
+                ++_strength;
+                --_learn_points;
+
+                audio.PlayOneShot(_sound_levelup);
+            }
+        }
+        GUI.Label(_gui_attribs_strength_desc, "\"More strength means more damage!\"");
+
+        GUI.Label(_gui_attribs_endurance_label, "Endurance ");
+        GUI.Label(_gui_attribs_endurance_value, _endurance.ToString());
+        if (GUI.Button(_gui_attribs_endurance_button, "+"))
+        {
+            if (_learn_points > 0)
+            {
+                ++_endurance;
+                --_learn_points;
+
+                _hitpoints_max += 10;
+                _hitpoints = _hitpoints_max;
+
+                audio.PlayOneShot(_sound_levelup);
+            }
+        }
+        GUI.Label(_gui_attribs_endurance_desc, "\"You can't hurt me! And better potions.\"");
+
+        GUI.Label(_gui_attribs_speed_label, "Speed ");
+        GUI.Label(_gui_attribs_speed_value, _speed.ToString());
+        if (GUI.Button(_gui_attribs_speed_button, "+"))
+        {
+            if (_learn_points > 0)
+            {
+                ++_speed;
+                --_learn_points;
+
+                _char_motor.movement.maxForwardSpeed += 0.5f;
+                _char_motor.movement.maxSidewaysSpeed += 0.5f;
+
+                audio.PlayOneShot(_sound_levelup);
+            }
+        }
+        GUI.Label(_gui_attribs_speed_desc, "\"Run faster! Kill faster!\"");
+
+        if (GUI.Button(_gui_buy_button, "Buy Potion: 50 Gold"))
+        {
+            if (_coins_num > 50)
+            {
+                ++_potions_num;
+                _coins_num -= 50;
+                audio.PlayOneShot(_sound_coins_pickup);
+            }
+        }
+
+        if (GUI.Button(_gui_close_button, "Done"))
+            show_attribs_gui(false);
 
         if (GUI.Button(_gui_quit_button, "Quit"))
-        {
             Application.LoadLevel(0);
-        }
-	}
+    }
 	
 	void Update()
 	{
@@ -266,18 +289,12 @@ public class player : MonoBehaviour
 			return;
 		
 		if (_door != null && _keys_num > 0 && _can_drink && Input.GetButton("Fire2"))
-		{
 			StartCoroutine(use_key());
-		}
 		else if (_door == null && _can_drink && Input.GetButton("Fire2"))
-		{
 			StartCoroutine(drink_health_potion());
-		}
 		
 		if (_can_attack && Input.GetButton("Fire1"))
-		{
 			StartCoroutine(attack());
-		}		
 	}
 	
 	void set_near_door(GameObject door)
@@ -331,6 +348,8 @@ public class player : MonoBehaviour
 	void receive_damage(int amount)
 	{
 		_hitpoints -= amount;
+
+        StartCoroutine(show_blood());
 		
 		if (_hitpoints <= 0)
 		{						
@@ -359,7 +378,8 @@ public class player : MonoBehaviour
 			_learn_points += 2;
 			_xp_next_level = (_level + _level) * 10;
 			
-			show_attribs_gui(true);
+			//show_attribs_gui(true);
+            _show_levelup = true;
 			
 			audio.PlayOneShot(_sound_levelup);
 		}
@@ -368,6 +388,8 @@ public class player : MonoBehaviour
 	void show_attribs_gui(bool show)
 	{
         Time.timeScale = !show ? 1f : 0f;
+
+        _show_levelup = false;
 
 		_show_gui = show;
 		Screen.lockCursor = !show;
@@ -391,6 +413,18 @@ public class player : MonoBehaviour
             }
         }
 	}
+
+    IEnumerator show_blood()
+    {
+        for (int i = 0; i < blood_overlay_tex.Length; ++i)
+        {
+            _show_blood = true;
+            _blood_overlay_index = i;
+            yield return new WaitForSeconds(Random.Range(0.15f, 0.25f));
+        }
+
+        _show_blood = _hitpoints <= dungeon_level * 5 && _hitpoints_max > dungeon_level * 5;
+    }
 	
 	IEnumerator attack()
 	{
@@ -445,7 +479,9 @@ public class player : MonoBehaviour
 			audio.PlayOneShot(_sound_potion_drink);
 			
 			_hitpoints += 2 * _endurance;
-			_hitpoints = Mathf.Min(_hitpoints, _hitpoints_max);
+            _hitpoints = Mathf.Min(_hitpoints, _hitpoints_max);
+
+            _show_blood = _hitpoints <= dungeon_level * 5 && _hitpoints_max > dungeon_level * 5;
 			
 			yield return new WaitForSeconds(1);
 			

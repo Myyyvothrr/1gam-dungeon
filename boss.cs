@@ -85,11 +85,11 @@ public class boss : MonoBehaviour
             if (_killed)
                 break;
 
-            switch (Random.Range(0, 6))
+            switch (Random.Range(0, 5))
             {
                 case 0:
                     {
-                        animation.CrossFade("Idle", 1f);
+                        animation.CrossFade("Idle", 0.2f);
                         yield return new WaitForSeconds(Random.Range(1f, 3f));
                         break;
                     }
@@ -152,12 +152,6 @@ public class boss : MonoBehaviour
                         yield return new WaitForSeconds(15f);
                         break;
                     }
-                case 5:
-                    {
-                        animation.CrossFade("Idle", 1f);
-                        yield return new WaitForSeconds(Random.Range(1f, 3f));
-                        break;
-                    }
             }
         }
     }
@@ -199,8 +193,6 @@ public class boss : MonoBehaviour
             return;
 
         if (other.gameObject.tag.Equals("Player"))
-        {
             other.gameObject.SendMessage("receive_damage", damage);
-        }
     }
 }

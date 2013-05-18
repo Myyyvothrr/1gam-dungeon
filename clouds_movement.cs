@@ -18,8 +18,6 @@ public class clouds_movement : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (other.tag.Equals("Player"))
-        {
             other.SendMessage("receive_damage", 100000);
-        }
     }
 }

@@ -37,8 +37,6 @@ public class door : MonoBehaviour
 	void OnTriggerExit(Collider other)
 	{
 		if (other.gameObject.tag.Equals("Player"))
-		{
 			other.gameObject.SendMessage("update_near_door", false);
-		}
 	}
 }

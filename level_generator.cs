@@ -85,22 +85,22 @@ public class level_generator : MonoBehaviour
         return exit_reachable;
     }
     
-    bool _connected_step(int i, int end_index)
+    void _connected_step(int i, int end_index)
     {
         if (i == end_index)
             exit_reachable = true;
 
         if (i < 0 || i >= tiles.Length)
-            return false;
+            return;
 
         if (tiles[i].visited)
-            return false;
+            return;
 
         tiles[i].visited = true;
         ++tiles_visited;
 
         if (tiles[i].type == -1)
-            return false;
+            return;
 
         if (tiles[i].has_door)
         {
@@ -119,19 +119,10 @@ public class level_generator : MonoBehaviour
             tiles_key[Random.Range(0, k)].spawn_key = true;
         }
 
-        if (_connected_step(index(tiles[i].x + 1, tiles[i].y), end_index))
-            return true;
-
-        if (_connected_step(index(tiles[i].x-1, tiles[i].y), end_index))
-            return true;
-
-        if (_connected_step(index(tiles[i].x, tiles[i].y+1), end_index))
-            return true;
-
-        if (_connected_step(index(tiles[i].x, tiles[i].y - 1), end_index))
-            return true;
-
-        return false;
+        _connected_step(index(tiles[i].x + 1, tiles[i].y), end_index);
+        _connected_step(index(tiles[i].x - 1, tiles[i].y), end_index);
+        _connected_step(index(tiles[i].x, tiles[i].y+1), end_index);
+        _connected_step(index(tiles[i].x, tiles[i].y - 1), end_index);
     }
 
     void _create_way(Room r1, Room r2)
@@ -231,7 +222,7 @@ public class level_generator : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("The Mage Dungeon v1.4");
+        Debug.Log("The Mage Dungeon v1.5");
 
         GameObject player = GameObject.Find("/player");
         if (player == null)
